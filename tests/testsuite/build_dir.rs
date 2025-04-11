@@ -512,6 +512,33 @@ fn template_should_error_for_invalid_variables() {
         .with_stderr_data(str![[r#"
 [ERROR] unexpected variable `fake` in build.build-dir path `{fake}/build-dir`
 
+[HELP] available template variables are `{workspace-root}`, `{cargo-cache-home}`, `{workspace-path-hash}`
+
+"#]])
+        .run();
+}
+
+#[cargo_test]
+fn template_should_suggest_nearest_variable() {
+    let p = project()
+        .file("src/lib.rs", "")
+        .file(
+            ".cargo/config.toml",
+            r#"
+            [build]
+            build-dir = "{workspace-ro}/build-dir"
+            "#,
+        )
+        .build();
+
+    p.cargo("build -Z build-dir")
+        .masquerade_as_nightly_cargo(&["build-dir"])
+        .with_status(101)
+        .with_stderr_data(str![[r#"
+[ERROR] unexpected variable `workspace-ro` in build.build-dir path `{workspace-ro}/build-dir`
+
+[HELP] a template variable with a similar name exists: `workspace-root`
+
 "#]])
         .run();
 }
@@ -682,6 +709,49 @@ fn template_workspace_path_hash_should_handle_symlink() {
         assert_build_dir_layout(build_dir, "debug");
         assert_artifact_dir_layout(p.root().join("target"), "debug");
     }
+}
+
+#[cargo_test]
+fn template_should_handle_reject_unmatched_brackets() {
+    let p = project()
+        .file("src/lib.rs", "")
+        .file(
+            ".cargo/config.toml",
+            r#"
+            [build]
+            build-dir = "foo/{bar"
+            "#,
+        )
+        .build();
+
+    p.cargo("build -Z build-dir")
+        .masquerade_as_nightly_cargo(&["build-dir"])
+        .with_status(101)
+        .with_stderr_data(str![[r#"
+[ERROR] unexpected opening bracket `{` in build.build-dir path `foo/{bar`
+
+"#]])
+        .run();
+
+    let p = project()
+        .file("src/lib.rs", "")
+        .file(
+            ".cargo/config.toml",
+            r#"
+            [build]
+            build-dir = "foo/}bar"
+            "#,
+        )
+        .build();
+
+    p.cargo("build -Z build-dir")
+        .masquerade_as_nightly_cargo(&["build-dir"])
+        .with_status(101)
+        .with_stderr_data(str![[r#"
+[ERROR] unexpected closing bracket `}` in build.build-dir path `foo/}bar`
+
+"#]])
+        .run();
 }
 
 fn parse_workspace_manifest_path_hash(hash_dir: &PathBuf) -> PathBuf {
