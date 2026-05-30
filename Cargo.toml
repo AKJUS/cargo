@@ -77,7 +77,7 @@ memchr = "2.8.0"
 memfd = "0.6.5"
 miow = "0.6.1"
 opener = "0.8.4"
-openssl = "0.10.76"
+openssl = "0.10.80"
 openssl-src = "300.6.0"
 os_info = { version = "3.14.0", default-features = false }
 pasetors = { version = "0.7.8", features = ["v3", "paserk", "std", "serde"] }
@@ -108,7 +108,7 @@ shell-escape = "0.1.5"
 supports-hyperlinks = "3.2.0"
 supports-unicode = "3.0.0"
 snapbox = { version = "1.2.0", features = ["diff", "dir", "term-svg", "regex", "json"] }
-tar = { version = "0.4.45", default-features = false }
+tar = { version = "0.4.46", default-features = false }
 tempfile = "3.27.0"
 thiserror = "2.0.18"
 time = { version = "0.3.47", features = ["parsing", "formatting", "serde"] }
